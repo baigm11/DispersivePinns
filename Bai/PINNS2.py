@@ -34,7 +34,7 @@ def initialize_inputs(len_sys_argv):
             "regularization_parameter": 0,
             "batch_size": (n_coll_ + n_u_ + n_int_),
             "epochs": 1,
-            "max_iter": 100,
+            "max_iter": 5000,
             "activation": "tanh",
             "optimizer": "LBFGS" #ADAM
         }

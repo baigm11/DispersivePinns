@@ -11,8 +11,8 @@ parameter_dimensions = 0
 # Number of output dimensions
 output_dimensions = 1
 # Domain Extrema
-extrema_values = torch.tensor([[-1, 1],  # Time t
-                               [-10, 10]])  # Space x
+extrema_values = torch.tensor([[-10., 10.],  # Time t
+                               [-30., 30.]])  # Space x
 # Additional variable to use here
 c = 3
 
@@ -55,7 +55,15 @@ def exact(inputs):
     '''
     t = inputs[:, 0]
     x = inputs[:, 1]
-    u = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x - c * t)) ** 2
+    # u = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x - c * t)) ** 2
+
+    a = torch.tensor(0.5)
+    b = torch.tensor(1.)
+
+    u = 6 * (b - a) \
+        * (b / torch.sinh(torch.sqrt(0.5 * b) * (x - 2 * b * t)) ** 2 + a / torch.cosh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) ** 2) \
+        / (torch.sqrt(a) * torch.tanh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) - torch.sqrt(b) / torch.tanh(torch.sqrt(0.5 * b) * (x - 2 * b * t))) ** 2
+
     return u.reshape(-1, 1)
 
 
@@ -162,7 +170,7 @@ def plotting(model, images_path, extrema, solid):
     model = model.eval()
     n = 500
     x = torch.reshape(torch.linspace(extrema[1, 0], extrema[1, 1], n), [n, 1])
-    time_steps = [-1.0, 1.0]
+    time_steps = [-10., 10.]
     scale_vec = np.linspace(0.65, 1.55, len(time_steps))
 
     fig = plt.figure()
