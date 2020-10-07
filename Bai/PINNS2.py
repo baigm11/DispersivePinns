@@ -1,5 +1,7 @@
 from ImportFile import *
 
+from Bai.ModelClassTorch2 import fit, StandardFit
+
 pi = math.pi
 torch.manual_seed(42)
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -306,8 +308,10 @@ else:
 print(network_properties)
 
 if N_coll_train != 0:
+    print("bg")
     final_error_train = fit(model, training_set_class, validation_set_clsss=validation_set_class, verbose=True,
                             training_ic=False)
+    print("ly")
 else:
     final_error_train = StandardFit(model, training_set_class, validation_set_clsss=validation_set_class, verbose=True)
 end = time.time() - start
@@ -325,10 +329,10 @@ final_error_test = 0
 # ##############################################################################################
 # Plotting ang Assessing Performance
 images_path = folder_path + "/Images"
-os.mkdir(folder_path)
-os.mkdir(images_path)
+os.makedirs(folder_path, exist_ok=True)
+os.makedirs(images_path, exist_ok=True)
 model_path = folder_path + "/TrainedModel"
-os.mkdir(model_path)
+os.makedirs(model_path, exist_ok=True)
 L2_test, rel_L2_test = Ec.compute_generalization_error(model, extrema, images_path)
 Ec.plotting(model, images_path, extrema, solid_object)
 

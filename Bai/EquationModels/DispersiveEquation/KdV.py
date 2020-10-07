@@ -69,7 +69,7 @@ def ub0(t):
     '''
     # Specify tipy of BC: "func" = "Dirichlet
     type_BC = ["func"]
-    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 0])
+    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 0], dtype=torch.double)
     inputs = torch.cat([t, x0], 1)
     out = exact(inputs)
     return out.reshape(-1, 1), type_BC
@@ -84,7 +84,7 @@ def ub1(t):
     Returns: the vector containing the BC at given inputs
     '''
     type_BC = ["func"]
-    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1])
+    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1], dtype=torch.double)
     inputs = torch.cat([t, x0], 1)
     out = exact(inputs)
     return out.reshape(-1, 1), type_BC
