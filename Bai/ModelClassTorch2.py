@@ -475,6 +475,7 @@ class CustomLoss(torch.nn.Module):
             # Space dimensions
             if not training_ic and Ec.extrema_values is not None:
                 for i in range(space_dimensions):
+                    #kdv
                     half_len_x_b_train_i = int(x_b_train.shape[0] / (2 * space_dimensions))
 
                     x_b_train_i = x_b_train[i * int(x_b_train.shape[0] / space_dimensions):(i + 1) * int(
@@ -482,6 +483,7 @@ class CustomLoss(torch.nn.Module):
                     u_b_train_i = u_b_train[i * int(x_b_train.shape[0] / space_dimensions):(i + 1) * int(
                         x_b_train.shape[0] / space_dimensions), :]
                     boundary = 0
+                    #kdv
                     while boundary < 2:
 
                         x_b_train_i_half = x_b_train_i[

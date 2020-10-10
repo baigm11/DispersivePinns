@@ -11,8 +11,8 @@ parameter_dimensions = 0
 # Number of output dimensions
 output_dimensions = 1
 # Domain Extrema
-extrema_values = torch.tensor([[-10., 10.],  # Time t
-                               [-30., 30.]])  # Space x
+extrema_values = torch.tensor([[-5., 5.],  # Time t
+                               [-15., 15.]])  # Space x
 # Additional variable to use here
 c = 3
 
@@ -57,12 +57,16 @@ def exact(inputs):
     x = inputs[:, 1]
     # u = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x - c * t)) ** 2
 
-    a = torch.tensor(0.5)
+    a = torch.tensor(.5)
     b = torch.tensor(1.)
 
     u = 6 * (b - a) \
         * (b / torch.sinh(torch.sqrt(0.5 * b) * (x - 2 * b * t)) ** 2 + a / torch.cosh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) ** 2) \
         / (torch.sqrt(a) * torch.tanh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) - torch.sqrt(b) / torch.tanh(torch.sqrt(0.5 * b) * (x - 2 * b * t))) ** 2
+
+    # u = 12 \
+    #     * (3 + 4 * torch.cosh(2 * (x - 4 * t)) + torch.cosh(4 * (x - 16 * t))) \
+    #     / (3 * torch.cosh(x - 28 * t) + torch.cosh(3 * (x - 12 * t))) ** 2
 
     return u.reshape(-1, 1)
 
@@ -98,11 +102,32 @@ def ub1(t):
     return out.reshape(-1, 1), type_BC
 
 
+def ub2(t):
+    '''
+    Assign Boundary conditions at x=x_right
+    Args:
+        t: time vector (x is fixed and x=x_right, so it is not given as input). BC can be function of time only for 1D space dimensions
+
+    Returns: the vector containing the BC at given inputs
+    '''
+    type_BC = ["der"]
+    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1], dtype=torch.double)
+    inputs = torch.cat([t, x0], 1)
+    inputs.requires_grad_(True)
+
+    u = exact(inputs).reshape(-1, )
+    grad_u = torch.autograd.grad(u, inputs, grad_outputs=torch.ones(inputs.shape[0], ), create_graph=True)[0]
+
+    grad_u_x = grad_u[:, 1]
+
+    return grad_u_x.reshape(-1, 1), type_BC
+
+
 # List containing the BC at x=x_left and x=x_rigth. For many space dimension then:
 # list_of_BC = [[ub0x, ub1x],
 #               [ub0y, ub1y]],
 
-list_of_BC = [[ub0, ub1]]
+list_of_BC = [[ub0, ub1, ub2]]
 
 
 def u0(x):
@@ -114,7 +139,16 @@ def u0(x):
     Returns: the vector containing the IC at given inputs
 
     '''
-    u0 = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x + c)) ** 2
+    # u0 = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x + c)) ** 2
+
+    a = torch.tensor(.5)
+    b = torch.tensor(1.)
+    t0 = torch.full(size=(x.shape[0], 1), fill_value=extrema_values[0, 0], dtype=torch.float)
+
+    u0 = 6 * (b - a) \
+        * (b / torch.sinh(torch.sqrt(0.5 * b) * (x - 2 * b * t0)) ** 2 + a / torch.cosh(torch.sqrt(0.5 * a) * (x - 2 * a * t0)) ** 2) \
+        / (torch.sqrt(a) * torch.tanh(torch.sqrt(0.5 * a) * (x - 2 * a * t0)) - torch.sqrt(b) / torch.tanh(torch.sqrt(0.5 * b) * (x - 2 * b * t0))) ** 2
+
     return u0.reshape(-1, 1)
 
 
@@ -170,7 +204,7 @@ def plotting(model, images_path, extrema, solid):
     model = model.eval()
     n = 500
     x = torch.reshape(torch.linspace(extrema[1, 0], extrema[1, 1], n), [n, 1])
-    time_steps = [-10., 10.]
+    time_steps = extrema_values[0, :].detach().numpy()    #[-5., 5.]
     scale_vec = np.linspace(0.65, 1.55, len(time_steps))
 
     fig = plt.figure()

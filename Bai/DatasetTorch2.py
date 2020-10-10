@@ -43,6 +43,7 @@ class DefineDataset:
             self.n_object = obj.n_object_space * obj.n_object_time
         else:
             self.n_object = 0
+        #kdv
         self.n_samples = self.n_collocation + 2 * self.n_boundary * self.space_dimensions + self.n_initial * self.time_dimensions + self.n_internal + self.n_object
         self.input_dimensions = self.time_dimensions + self.space_dimensions + self.parameter_dimensions
         self.BC = None
@@ -57,6 +58,7 @@ class DefineDataset:
     def assemble_dataset(self):
 
         fraction_coll = int(self.batches * self.n_collocation / self.n_samples)
+        # kdv
         fraction_boundary = int(self.batches * 2 * self.n_boundary * self.space_dimensions / self.n_samples)
         fraction_initial = int(self.batches * self.n_initial / self.n_samples)
         fraction_ob = int(self.batches * self.n_object / self.n_samples)
@@ -86,6 +88,7 @@ class DefineDataset:
             y_list_b = list()
 
             x_list_b_param = list()
+            #kdv
             for i in range(self.time_dimensions, self.time_dimensions + self.space_dimensions):
                 BC_01 = list()
                 val_0 = np.delete(self.extrema_values, i, 0)[:, 0]

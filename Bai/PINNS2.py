@@ -14,7 +14,7 @@ def initialize_inputs(len_sys_argv):
         sampling_seed_ = 0
 
         # Number of training+validation points
-        n_coll_ = 2048
+        n_coll_ = 2048 * 2
         n_u_ = 1024
         n_int_ = 0
 
@@ -29,12 +29,12 @@ def initialize_inputs(len_sys_argv):
         network_properties_ = {
             "hidden_layers": 4,
             "neurons": 20,
-            "residual_parameter": 0.1,
+            "residual_parameter": 1, #0.1
             "kernel_regularizer": 2,
             "regularization_parameter": 0,
             "batch_size": (n_coll_ + n_u_ + n_int_),
             "epochs": 1,
-            "max_iter": 5000,
+            "max_iter": 2000,
             "activation": "tanh",
             "optimizer": "LBFGS" #ADAM
         }
@@ -128,6 +128,7 @@ N_int_val = N_int - N_int_train
 N_object_val = N_object - N_object_train
 N_val = N_u_val + N_coll_val + N_int_val + N_object_val
 
+#kdv
 if space_dimensions > 0:
     N_b_train = int(N_u_train / (4 * space_dimensions))
 else:
@@ -373,3 +374,45 @@ with open(folder_path + '/InfoModel.txt', 'w') as file:
                str(final_error_train) + "," +
                str(final_error_val) + "," +
                str(final_error_test))
+
+
+
+print("\n################################################")
+print("saving animation")
+print("################################################")
+
+#create animation
+#only for kdv(1-dim)
+import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
+plt.style.use('seaborn-pastel')
+
+
+fig = plt.figure()
+ax = plt.axes(xlim=extrema[1, :], ylim=[-1, 9])
+line, = ax.plot([], [], lw=3)
+
+frames = 200
+
+def init():
+    line.set_data([], [])
+    return line,
+def animate(i, model=model):
+    model.eval()
+
+    t = extrema[0, 0] + i * (extrema[0, 1] - extrema[0, 0]) / frames
+
+    x = torch.linspace(extrema[1, 0], extrema[1, 1], 1000).reshape(-1, 1)
+    t_vec = torch.full(size=(x.shape[0], 1), fill_value=t, dtype=torch.float)
+    inputs = torch.cat([t_vec, x], 1)
+    out = model(inputs)
+    line.set_data(x.detach().numpy(), out.detach().numpy())
+    return line,
+
+anim = FuncAnimation(fig, animate, init_func=init, frames=200, interval=20, blit=True)
+
+anim.save(images_path + '/double_soliton.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+# writergif = PillowWriter(fps=30)
+# anim.save(images_path + '/double_soliton.gif', writer=writergif)
+
