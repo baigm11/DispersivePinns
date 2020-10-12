@@ -12,9 +12,11 @@ certipy==0.1.3
 cffi @ file:///opt/concourse/worker/volumes/live/74b22aae-8eb9-44eb-6c00-a8a07af62b36/volume/cffi_1600699174113/work
 chardet==3.0.4
 cryptography @ file:///opt/concourse/worker/volumes/live/449c9d42-da39-4138-6bf0-843317a1ad24/volume/cryptography_1601046862310/work
+cycler==0.10.0
 decorator==4.4.2
 defusedxml==0.6.0
 entrypoints==0.3
+future==0.18.2
 idna @ file:///tmp/build/80754af9/idna_1593446292537/work
 importlib-metadata @ file:///opt/concourse/worker/volumes/live/84197498-cbc0-4436-7ce0-03c4490b7a28/volume/importlib-metadata_1593446431408/work
 ipykernel @ file:///opt/concourse/worker/volumes/live/73e8766c-12c3-4f76-62a6-3dea9a7da5b7/volume/ipykernel_1596206701501/work/dist/ipykernel-5.3.4-py3-none-any.whl
@@ -33,8 +35,10 @@ jupyterhub==1.0.0
 jupyterlab==2.2.8
 jupyterlab-pygments @ file:///tmp/build/80754af9/jupyterlab_pygments_1601490720602/work
 jupyterlab-server @ file:///home/conda/feedstock_root/build_artifacts/jupyterlab_server_1593951277307/work
+kiwisolver==1.2.0
 Mako==1.1.3
 MarkupSafe==1.1.1
+matplotlib==3.1.3
 mistune==0.8.4
 mkl-fft==1.2.0
 mkl-random==1.1.1
@@ -47,8 +51,10 @@ notebook @ file:///opt/concourse/worker/volumes/live/d2f310db-b6ef-49ca-4ff6-cbb
 numpy @ file:///opt/concourse/worker/volumes/live/40d975a3-7e82-44c8-53df-feccdbce8b96/volume/numpy_and_numpy_base_1596233859108/work
 oauthlib==3.1.0
 olefile==0.46
+Open-Dynamics-Engine==0.12
 packaging==20.4
 pamela==1.0.0
+pandas @ file:///opt/concourse/worker/volumes/live/59754b01-e55a-441c-59b5-4878e3ad9d22/volume/pandas_1601567303900/work
 pandocfilters==1.4.2
 parso==0.7.0
 pexpect==4.8.0
@@ -59,6 +65,7 @@ prompt-toolkit @ file:///tmp/build/80754af9/prompt-toolkit_1598885458782/work
 ptyprocess==0.6.0
 pycparser @ file:///tmp/build/80754af9/pycparser_1594388511720/work
 pycurl==7.43.0.5
+pyDOE==0.3.8
 Pygments @ file:///tmp/build/80754af9/pygments_1600458456400/work
 PyJWT==1.7.1
 pyOpenSSL @ file:///tmp/build/80754af9/pyopenssl_1594392929924/work
@@ -67,12 +74,16 @@ pyrsistent @ file:///opt/concourse/worker/volumes/live/656e0c1b-ef87-4251-4a51-1
 PySocks==1.7.1
 python-dateutil==2.8.1
 python-editor==1.0.4
+pytz==2020.1
 pyzmq==19.0.2
 qtconsole @ file:///tmp/build/80754af9/qtconsole_1600870028330/work
 QtPy==1.9.0
 requests @ file:///tmp/build/80754af9/requests_1592841827918/work
+scipy @ file:///opt/concourse/worker/volumes/live/9698578f-91da-4d5f-6fce-b26b1f42eb5a/volume/scipy_1597686637948/work
+seaborn @ file:///tmp/build/80754af9/seaborn_1600553570093/work
 Send2Trash==1.5.0
 six==1.15.0
+sobol-seq==0.2.0
 SQLAlchemy @ file:///opt/concourse/worker/volumes/live/c8ccb658-c55f-4a2e-6c0c-7f57021ac0b1/volume/sqlalchemy_1598374749865/work
 terminado==0.8.3
 testpath==0.4.4

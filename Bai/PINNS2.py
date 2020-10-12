@@ -14,7 +14,7 @@ def initialize_inputs(len_sys_argv):
         sampling_seed_ = 0
 
         # Number of training+validation points
-        n_coll_ = 2048 * 2
+        n_coll_ = 2048
         n_u_ = 1024
         n_int_ = 0
 
@@ -29,12 +29,12 @@ def initialize_inputs(len_sys_argv):
         network_properties_ = {
             "hidden_layers": 4,
             "neurons": 20,
-            "residual_parameter": 1, #0.1
+            "residual_parameter": 0.1, #0.1
             "kernel_regularizer": 2,
             "regularization_parameter": 0,
             "batch_size": (n_coll_ + n_u_ + n_int_),
             "epochs": 1,
-            "max_iter": 2000,
+            "max_iter": 1000,
             "activation": "tanh",
             "optimizer": "LBFGS" #ADAM
         }
@@ -390,7 +390,7 @@ plt.style.use('seaborn-pastel')
 
 
 fig = plt.figure()
-ax = plt.axes(xlim=extrema[1, :], ylim=[-1, 9])
+ax = plt.axes(xlim=extrema[1, :], ylim=Ec.val_range)
 line, = ax.plot([], [], lw=3)
 
 frames = 200
@@ -412,7 +412,7 @@ def animate(i, model=model):
 
 anim = FuncAnimation(fig, animate, init_func=init, frames=200, interval=20, blit=True)
 
-anim.save(images_path + '/double_soliton.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+anim.save(images_path + '/Kawa_single.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 # writergif = PillowWriter(fps=30)
 # anim.save(images_path + '/double_soliton.gif', writer=writergif)
 
