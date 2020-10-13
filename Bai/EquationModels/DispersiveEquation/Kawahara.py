@@ -152,7 +152,7 @@ def u0(x):
     #L1 = torch.tensor(20.)
     #L2 = torch.tensor(40.)
     #u0 = (105 / 169) / torch.cosh((x - L1) / (2 * np.sqrt(13))) ** 4 \
-       + (105 / (4 * 169)) / torch.cosh((x - L2) / np.sqrt(13)) ** 4
+    #   + (105 / (4 * 169)) / torch.cosh((x - L2) / np.sqrt(13)) ** 4
 
     #u0 = (105 / (4 * 169)) / torch.cosh((x - L2) / np.sqrt(13)) ** 4
 
