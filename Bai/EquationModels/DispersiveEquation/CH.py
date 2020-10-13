@@ -16,7 +16,7 @@ extrema_values = torch.tensor([[0., 4.],  # Time t
 # Additional variable to use here
 c = 3
 
-# val_range = [0., 2.]
+val_range = [-0.1, 2.]
 
 def compute_res(network, x_f_train, space_dimensions, solid_object, computing_error=False):
     '''

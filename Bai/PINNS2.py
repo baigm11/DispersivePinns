@@ -390,7 +390,7 @@ plt.style.use('seaborn-pastel')
 
 
 fig = plt.figure()
-ax = plt.axes(xlim=extrema[1, :]''', ylim=Ec.val_range''')
+ax = plt.axes(xlim=extrema[1, :], ylim=Ec.val_range)
 line, = ax.plot([], [], lw=3)
 
 frames = 200
