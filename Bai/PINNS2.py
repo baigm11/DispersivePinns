@@ -34,7 +34,7 @@ def initialize_inputs(len_sys_argv):
             "regularization_parameter": 0,
             "batch_size": (n_coll_ + n_u_ + n_int_),
             "epochs": 1,
-            "max_iter": 50000,
+            "max_iter": 10,
             "activation": "tanh",
             "optimizer": "LBFGS" #ADAM
         }
@@ -390,7 +390,7 @@ plt.style.use('seaborn-pastel')
 
 
 fig = plt.figure()
-ax = plt.axes(xlim=extrema[1, :], ylim=Ec.val_range)
+ax = plt.axes(xlim=extrema[1, :]''', ylim=Ec.val_range''')
 line, = ax.plot([], [], lw=3)
 
 frames = 200
