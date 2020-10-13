@@ -1,6 +1,6 @@
 from ImportFile import *
 
-from Bai.ModelClassTorch2 import fit, StandardFit
+#from Bai.ModelClassTorch2 import fit, StandardFit
 
 pi = math.pi
 torch.manual_seed(42)
@@ -14,8 +14,8 @@ def initialize_inputs(len_sys_argv):
         sampling_seed_ = 0
 
         # Number of training+validation points
-        n_coll_ = 2048
-        n_u_ = 1024
+        n_coll_ = 2048 * 1
+        n_u_ = 1024 * 1
         n_int_ = 0
 
         # Only for Navier Stokes
@@ -34,7 +34,7 @@ def initialize_inputs(len_sys_argv):
             "regularization_parameter": 0,
             "batch_size": (n_coll_ + n_u_ + n_int_),
             "epochs": 1,
-            "max_iter": 1000,
+            "max_iter": 50000,
             "activation": "tanh",
             "optimizer": "LBFGS" #ADAM
         }
@@ -412,7 +412,7 @@ def animate(i, model=model):
 
 anim = FuncAnimation(fig, animate, init_func=init, frames=200, interval=20, blit=True)
 
-anim.save(images_path + '/Kawa_single.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
-# writergif = PillowWriter(fps=30)
-# anim.save(images_path + '/double_soliton.gif', writer=writergif)
+#anim.save(images_path + '/Kawa_single.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+writergif = PillowWriter(fps=30)
+anim.save(images_path + '/Kawa_single.gif', writer=writergif)
 
