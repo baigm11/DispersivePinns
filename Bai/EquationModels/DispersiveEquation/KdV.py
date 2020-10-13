@@ -55,18 +55,17 @@ def exact(inputs):
     '''
     t = inputs[:, 0]
     x = inputs[:, 1]
+
+    # KdV single soliton
     # u = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x - c * t)) ** 2
 
+    # KdV double soliton
     a = torch.tensor(.5)
     b = torch.tensor(1.)
 
     u = 6 * (b - a) \
         * (b / torch.sinh(torch.sqrt(0.5 * b) * (x - 2 * b * t)) ** 2 + a / torch.cosh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) ** 2) \
         / (torch.sqrt(a) * torch.tanh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) - torch.sqrt(b) / torch.tanh(torch.sqrt(0.5 * b) * (x - 2 * b * t))) ** 2
-
-    # u = 12 \
-    #     * (3 + 4 * torch.cosh(2 * (x - 4 * t)) + torch.cosh(4 * (x - 16 * t))) \
-    #     / (3 * torch.cosh(x - 28 * t) + torch.cosh(3 * (x - 12 * t))) ** 2
 
     return u.reshape(-1, 1)
 
@@ -139,8 +138,11 @@ def u0(x):
     Returns: the vector containing the IC at given inputs
 
     '''
+
+    # KdV single soliton
     # u0 = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x + c)) ** 2
 
+    # KdV double soliton
     a = torch.tensor(.5)
     b = torch.tensor(1.)
     t0 = torch.full(size=(x.shape[0], 1), fill_value=extrema_values[0, 0], dtype=torch.float)

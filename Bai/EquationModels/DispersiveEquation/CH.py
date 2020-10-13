@@ -11,7 +11,7 @@ parameter_dimensions = 0
 # Number of output dimensions
 output_dimensions = 1
 # Domain Extrema
-extrema_values = torch.tensor([[-0., 4.],  # Time t
+extrema_values = torch.tensor([[0., 4.],  # Time t
                                [0., 25.]])  # Space x
 # Additional variable to use here
 c = 3
@@ -59,24 +59,10 @@ def exact(inputs):
     t = inputs[:, 0]
     x = inputs[:, 1]
 
-    #kdv single soliton
-    # u = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x - c * t)) ** 2
-
-
-    #kdv double soliton
-    # a = torch.tensor(.5)
-    # b = torch.tensor(1.)
-    #
-    # u = 6 * (b - a) \
-    #     * (b / torch.sinh(torch.sqrt(0.5 * b) * (x - 2 * b * t)) ** 2 + a / torch.cosh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) ** 2) \
-    #     / (torch.sqrt(a) * torch.tanh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) - torch.sqrt(b) / torch.tanh(torch.sqrt(0.5 * b) * (x - 2 * b * t))) ** 2
-
-
     #CH single peakon
     c = torch.tensor(2.)
-    # a = torch.full(size=(t.shape[0], 1), fill_value=40, dtype=torch.float)
-    u = c * torch.exp(-torch.abs(x - 10 - c * t))
-
+    x0 = torch.tensor(10.)
+    u = c * torch.exp(-torch.abs(x - x0 - c * t))
 
     return u.reshape(-1, 1)
 
@@ -149,23 +135,11 @@ def u0(x):
     Returns: the vector containing the IC at given inputs
 
     '''
-    # kdv single soliton
-    # u0 = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x + c)) ** 2
-
-    # kdv double soliton
-    # a = torch.tensor(.5)
-    # b = torch.tensor(1.)
-    # t0 = torch.full(size=(x.shape[0], 1), fill_value=extrema_values[0, 0], dtype=torch.float)
-    #
-    # u0 = 6 * (b - a) \
-    #     * (b / torch.sinh(torch.sqrt(0.5 * b) * (x - 2 * b * t0)) ** 2 + a / torch.cosh(torch.sqrt(0.5 * a) * (x - 2 * a * t0)) ** 2) \
-    #     / (torch.sqrt(a) * torch.tanh(torch.sqrt(0.5 * a) * (x - 2 * a * t0)) - torch.sqrt(b) / torch.tanh(torch.sqrt(0.5 * b) * (x - 2 * b * t0))) ** 2
-
 
     #CH sinlge peakon
     c = torch.tensor(2.)
-    a = torch.full(size=(x.shape[0], 1), fill_value=35, dtype=torch.float)
-    u0 = c * torch.exp(-torch.abs(x - 10))
+    x0 = torch.tensor(10.)
+    u0 = c * torch.exp(-torch.abs(x - x0))
 
     return u0.reshape(-1, 1)
 

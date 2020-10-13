@@ -59,19 +59,10 @@ def exact(inputs):
     '''
     t = inputs[:, 0]
     x = inputs[:, 1]
-    # u = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x - c * t)) ** 2
 
-    # a = torch.tensor(.5)
-    # b = torch.tensor(1.)
-    #
-    # u = 6 * (b - a) \
-    #     * (b / torch.sinh(torch.sqrt(0.5 * b) * (x - 2 * b * t)) ** 2 + a / torch.cosh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) ** 2) \
-    #     / (torch.sqrt(a) * torch.tanh(torch.sqrt(0.5 * a) * (x - 2 * a * t)) - torch.sqrt(b) / torch.tanh(torch.sqrt(0.5 * b) * (x - 2 * b * t))) ** 2
-
-    # x0 = torch.full(size=(x.shape[0], 1), fill_value=20., dtype=torch.float)
+    #Kawa single soliton
     L = torch.tensor(20.)
     u = (105 / 169) / torch.cosh((x - L - 205 * t / 169) / (2 * np.sqrt(13))) ** 4
-
 
     return u.reshape(-1, 1)
 
@@ -146,15 +137,18 @@ def u0(x):
     '''
     # u0 = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x + c)) ** 2
 
+    #Kawa single soliton
     L = torch.tensor(20.)
     u0 = (105 / 169) / torch.cosh((x - L) / (2 * np.sqrt(13))) ** 4
 
-    #L1 = torch.tensor(20.)
-    #L2 = torch.tensor(40.)
-    #u0 = (105 / 169) / torch.cosh((x - L1) / (2 * np.sqrt(13))) ** 4 \
+    #Kawa double soliton
+    # L1 = torch.tensor(20.)
+    # L2 = torch.tensor(40.)
+    # u0 = (105 / 169) / torch.cosh((x - L1) / (2 * np.sqrt(13))) ** 4 \
     #   + (105 / (4 * 169)) / torch.cosh((x - L2) / np.sqrt(13)) ** 4
 
-    #u0 = (105 / (4 * 169)) / torch.cosh((x - L2) / np.sqrt(13)) ** 4
+    # smaller soliton in two soliton sol
+    # u0 = (105 / (4 * 169)) / torch.cosh((x - L2) / np.sqrt(13)) ** 4
 
     return u0.reshape(-1, 1)
 
