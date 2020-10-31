@@ -52,10 +52,10 @@ for retrain in range(len(seeds)):
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         if cluster == "true":
             if GPU is not None:
-                string_to_exec = "bsub -W 4:00 -R \"rusage[mem=16384,ngpus_excl_p=1]\" -R \"select[gpu_model0==" + GPU + "]\" python3 PINNS2.py  "
+                string_to_exec = "bsub -W 6:00 -R \"rusage[mem=16384,ngpus_excl_p=1]\" -R \"select[gpu_model0==" + GPU + "]\" python3 PINNS2.py  "
                 print(string_to_exec)
             else:
-                string_to_exec = "bsub -W 4:00 -R \"rusage[mem=8192]\" python3 PINNS2.py  "
+                string_to_exec = "bsub -W 6:00 -R \"rusage[mem=8192]\" python3 PINNS2.py  "
         else:
             string_to_exec = "python3 PINNS2.py "
         for arg in arguments:

@@ -14,21 +14,21 @@ folder_name = sys.argv[4]
 point = "sobol"
 validation_size = 0.0
 network_properties = {
-    "hidden_layers": [8],
-    "neurons": [20],
-    "residual_parameter": [0.1,1],
+    "hidden_layers": [8, 12, 16, 20],
+    "neurons": [20, 24, 28, 32, 36, 40],
+    "residual_parameter": [0.1, 1, 10],
     "kernel_regularizer": [2],
     "regularization_parameter": [0],
     "batch_size": [(N_coll + N_u + N_int)],
     "epochs": [1],
-    "max_iter": [50],
+    "max_iter": [100000],
     "activation": ["tanh"],
     "optimizer": ["LBFGS"]
 }
 shuffle = "false"
 cluster = sys.argv[5] #true True
-GPU = "None"  # GPU="GeForceGTX1080"  # GPU = "GeForceGTX1080Ti"  # GPU = "TeslaV100_SXM2_32GB"
-n_retrain = 2
+GPU = "GeForceGTX1080Ti"  # GPU=None    # GPU="GeForceGTX1080"  # GPU = "GeForceGTX1080Ti"  # GPU = "TeslaV100_SXM2_32GB"
+n_retrain = 5
 
 if not os.path.isdir(folder_name):
     os.mkdir(folder_name)

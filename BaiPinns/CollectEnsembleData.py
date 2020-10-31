@@ -3,7 +3,7 @@ from CollectUtils import *
 np.random.seed(42)
 
 
-base_path_list = ["TestBai"]
+base_path_list = ["kdv_double"]
 
 for base_path in base_path_list:
     print("#################################################")
