@@ -21,17 +21,18 @@ network_properties = json.loads(sys.argv[10])
 shuffle = sys.argv[11]
 cluster = sys.argv[12]
 GPU = sys.argv[13] if sys.argv[13] is not "None" else None
-n_retrain = int(sys.argv[14])
+n_retrain = int(sys.argv[14]) # [0, 4]
 
 seeds = list()
 seeds.append(42)
-for i in range(n_retrain - 1):
+for i in range(n_retrain + 1):
     seeds.append(random.randint(1, 100))
 print(seeds)
-os.mkdir(folder_path)
+# os.mkdir(folder_path)
+os.makedirs(folder_path, exist_ok=True)
 
-for retrain in range(len(seeds)):
-    folder_path_retraining = folder_path + "/Retrain_" + str(retrain)
+for retrain in range(1):
+    folder_path_retraining = folder_path + "/iter_" + str(network_properties["max_iter"])
     arguments = list()
     arguments.append(str(sampling_seed))
     arguments.append(str(n_coll))
@@ -46,18 +47,16 @@ for retrain in range(len(seeds)):
         arguments.append("\'" + str(network_properties).replace("\'", "\"") + "\'")
     else:
         arguments.append(str(network_properties).replace("\'", "\""))
-    arguments.append(str(seeds[retrain]))
+    arguments.append(str(seeds[n_retrain]))
     arguments.append(shuffle)
 
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         if cluster == "true":
             if GPU is not None:
                 string_to_exec = "bsub -W 4:00 -R \"rusage[mem=8192,ngpus_excl_p=1]\" -R \"select[gpu_model0==" + GPU + "]\" python3 PINNS2.py  "  # 16384
-                # UQ can't run on GPU, need debugging
-                # string_to_exec = "bsub -W 4:00 -R \"rusage[mem=8192,ngpus_excl_p=1]\" -R \"select[gpu_model0==" + GPU + "]\" python3 PINNS2.py  "  # 16384
                 print(string_to_exec)
             else:
-                string_to_exec = "bsub -W 4:00 -R \"rusage[mem=8192]\" python3 PINNS2.py  "
+                string_to_exec = "bsub -W 8:00 -R \"rusage[mem=8192]\" python3 PINNS2.py  "
         else:
             string_to_exec = "python3 PINNS2.py "
         for arg in arguments:

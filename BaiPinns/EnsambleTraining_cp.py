@@ -4,31 +4,44 @@ import itertools
 import subprocess
 from ImportFile import *
 
+import csv
+
+# change for different cases!!!
+# "kdv_single" "kdv_double" "Kawa_single" "Kawa_double2" "Kawa_gen"
+# "CH_single_lim1" "CH_double_lim1"
+# "BO_single_enh4_1" "BO_double_enh30"
+best_case = "Kawa_double2"
+best_path = "best/" + best_case + "best.csv"
+with open(best_path, newline='') as f:
+    reader = csv.reader(f)
+    data = list(reader)
+
+
 rs = 0
-N_coll = int(sys.argv[1])
-N_u = int(sys.argv[2])
-N_int = int(sys.argv[3])
+N_coll = int(data[15][0])
+N_u = int(data[14][0])
+N_int = int(data[16][0])
 n_object = 0
 ob = "None"
-folder_name = sys.argv[4]
+folder_name = sys.argv[1]
 point = "sobol"
 validation_size = 0.0
 network_properties = {
-    "hidden_layers": [4, 8],  # [4, 8, 12]
-    "neurons": [20, 24, 28],  # [20, 24, 28, 32]
-    "residual_parameter": [0.1, 1, 10],  # [0.1, 1, 10]
+    "hidden_layers": [int(data[4][0])],  # [4, 8, 12]
+    "neurons": [int(data[3][0])],  # [20, 24, 28, 32]
+    "residual_parameter": [float(data[5][0])],  # [0.1, 1, 10]
     "kernel_regularizer": [2],
     "regularization_parameter": [0],
     "batch_size": [(N_coll + N_u + N_int)],
     "epochs": [1],
-    "max_iter": [100000],
+    "max_iter": [100, 10000], # [100, 500, 1000, 2000, 5000, 10000]
     "activation": ["tanh"],
     "optimizer": ["LBFGS"]
 }
 shuffle = "false"
-cluster = sys.argv[5] #true True
+cluster = sys.argv[2] #true True
 GPU = "GeForceGTX1080Ti"  # GPU=None    # GPU="GeForceGTX1080"  # GPU = "GeForceGTX1080Ti"  # GPU = "TeslaV100_SXM2_32GB"
-n_retrain = 5
+n_retrain = int(data[25][0]) # num of best training config, [0, 4]
 
 if not os.path.isdir(folder_name):
     os.mkdir(folder_name)
@@ -38,7 +51,7 @@ i = 0
 for setup in settings:
     print(setup)
 
-    folder_path = folder_name + "/Setup_" + str(i)
+    folder_path = folder_name
     print("###################################")
     setup_properties = {
         "hidden_layers": setup[0],
@@ -74,9 +87,9 @@ for setup in settings:
 
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         if cluster == "true":
-            string_to_exec = "bsub python3 single_retraining.py "
+            string_to_exec = "bsub python3 single_retraining_cp.py "
         else:
-            string_to_exec = "python3 single_retraining.py "
+            string_to_exec = "python3 single_retraining_cp.py "
         for arg in arguments:
             string_to_exec = string_to_exec + " " + arg
         print(string_to_exec)

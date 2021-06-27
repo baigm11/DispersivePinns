@@ -11,12 +11,22 @@ parameter_dimensions = 0
 # Number of output dimensions
 output_dimensions = 1
 # Domain Extrema
-extrema_values = torch.tensor([[0., 30.],  # Time t
-                               [0., 80.]])  # Space x
+extrema_values = torch.tensor([[0., 4.],  # Time t 30, 40, 50; [0., 35.]; gen [0., 6.]; anti-gen [0., 2.]
+                               [0., 60.]])  # Space x 80, 100, 120; [0., 80.]; gen [0., 60.]; anti-gen [0., 60.]
 # Additional variable to use here
 c = 3
 
-val_range = [-0.1, 0.7]
+# val_range = [-0.1, 0.7] #single soliton & double soliton case 1
+# val_range = [-0.1, 4.1] #double soliton case 2, triple soliton
+# val_range = [-0.1, 10.1] #gen case 3
+val_range = [-5.5, 1.] #anti gen
+
+#initial position of single soliton
+L = torch.tensor(20.)
+
+#initial position of double soliton
+L1 = torch.tensor(20.)
+L2 = torch.tensor(30) # 30., 35., 40.
 
 
 def compute_res(network, x_f_train, space_dimensions, solid_object, computing_error=False):
@@ -77,9 +87,10 @@ def ub0(t):
     '''
     # Specify tipy of BC: "func" = "Dirichlet
     type_BC = ["func"]
-    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 0], dtype=torch.double)
-    inputs = torch.cat([t, x0], 1)
-    out = exact(inputs)
+    # x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 0], dtype=torch.double)
+    # inputs = torch.cat([t, x0], 1)
+    # out = exact(inputs)
+    out = torch.full(size=(t.shape[0], 1), fill_value=0, dtype=torch.double)
     return out.reshape(-1, 1), type_BC
 
 
@@ -92,9 +103,10 @@ def ub1(t):
     Returns: the vector containing the BC at given inputs
     '''
     type_BC = ["func"]
-    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1], dtype=torch.double)
-    inputs = torch.cat([t, x0], 1)
-    out = exact(inputs)
+    # x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1], dtype=torch.double)
+    # inputs = torch.cat([t, x0], 1)
+    # out = exact(inputs)
+    out = torch.full(size=(t.shape[0], 1), fill_value=0, dtype=torch.double)
     return out.reshape(-1, 1), type_BC
 
 
@@ -138,17 +150,54 @@ def u0(x):
     # u0 = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x + c)) ** 2
 
     #Kawa single soliton
-    L = torch.tensor(20.)
-    u0 = (105 / 169) / torch.cosh((x - L) / (2 * np.sqrt(13))) ** 4
+    # L = torch.tensor(20.)
+    # u0 = (105 / 169) / torch.cosh((x - L) / (2 * np.sqrt(13))) ** 4
 
     #Kawa double soliton
     # L1 = torch.tensor(20.)
-    # L2 = torch.tensor(40.)
+    # L2 = torch.tensor(27.5)
     # u0 = (105 / 169) / torch.cosh((x - L1) / (2 * np.sqrt(13))) ** 4 \
-    #   + (105 / (4 * 169)) / torch.cosh((x - L2) / np.sqrt(13)) ** 4
+    #   + (105 / (2 * 169)) / torch.cosh((x - L2) / np.sqrt(2 * 13)) ** 4
+
+    # Kawa double soliton case 2
+    # L1 = torch.tensor(20.)
+    # L2 = torch.tensor(30.)
+    # rho1 = torch.tensor(10. / 13.)
+    # rho2 = torch.tensor(8. / 13.)
+    # mu = torch.sqrt(torch.tensor(16. / 105.))
+    # d1 = rho1 / mu
+    # d2 = rho2 / mu
+    # u0 = d1 ** 2 / torch.cosh(0.25 * torch.sqrt(rho1) * (x - L1)) ** 4 \
+    #    + d2 ** 2 / torch.cosh(0.25 * torch.sqrt(rho2) * (x - L2)) ** 4 \
+
+    # Wave generation case 3
+    # gamma = torch.tensor(10.)
+    # u0 = gamma / torch.cosh((x - L) / (2 * np.sqrt(13))) ** 4
+
+    # Wave(anti) generation case 4
+    L = torch.tensor(40.)
+    gamma = torch.tensor(-5.)
+    u0 = gamma / torch.cosh((x - L) / (2 * np.sqrt(13))) ** 4
+
 
     # smaller soliton in two soliton sol
-    # u0 = (105 / (4 * 169)) / torch.cosh((x - L2) / np.sqrt(13)) ** 4
+    # L2 = torch.tensor(40.)
+    # u0 = (105 / (2 * 169)) / torch.cosh((x - L2) / np.sqrt(2 * 13)) ** 4
+
+    # Kawa triple soliton
+    # L1 = torch.tensor(20.)
+    # L2 = torch.tensor(30.)
+    # L3 = torch.tensor(40.)
+    # rho1 = torch.tensor(10. / 13.)
+    # rho2 = torch.tensor(8. / 13.)
+    # rho3 = torch.tensor(6. / 13.)
+    # mu = torch.sqrt(torch.tensor(16. / 105.))
+    # d1 = rho1 / mu
+    # d2 = rho2 / mu
+    # d3 = rho3 / mu
+    # u0 = d1 ** 2 / torch.cosh(0.25 * torch.sqrt(rho1) * (x - L1)) ** 4 \
+    #      + d2 ** 2 / torch.cosh(0.25 * torch.sqrt(rho2) * (x - L2)) ** 4 \
+    #      + d3 ** 2 / torch.cosh(0.25 * torch.sqrt(rho3) * (x - L3)) ** 4
 
     return u0.reshape(-1, 1)
 

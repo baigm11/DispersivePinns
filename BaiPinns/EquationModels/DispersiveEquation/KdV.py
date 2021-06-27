@@ -17,10 +17,11 @@ extrema_values = torch.tensor([[-1., 1.],  # Time t; single [-1., 1.]; double [-
 # c = 3
 
 # UQ single
-parameters_values = torch.tensor([[8.9, 9.1], # alpha
-                  [-0.1, 0.1], # beta
+parameters_values = torch.tensor([[8.7, 9.3], # alpha
+                  [-0.4, 0.4], # beta
+                    [0.9, 1.1], # gamma
                   [0.9, 1.1]]) # kappa
-parameter_dimensions = 3
+parameter_dimensions = 4
 
 # UQ double
 # parameters_values = torch.tensor([[0.4, 0.6], # a
@@ -47,16 +48,17 @@ def compute_res(network, x_f_train, space_dimensions, solid_object, computing_er
     u = network(x_f_train).reshape(-1, )
     sp = x_f_train.shape
     u_sq = 0.5 * u * u
-    grad_u = torch.autograd.grad(u, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0], ), create_graph=True)[0]
-    grad_u_sq_x = torch.autograd.grad(u_sq, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0], ), create_graph=True)[0][:, 1]
+    grad_u = torch.autograd.grad(u, x_f_train, grad_outputs=torch.ones_like(x_f_train[:, 0]), create_graph=True)[0]
+    grad_u_sq_x = torch.autograd.grad(u_sq, x_f_train, grad_outputs=torch.ones_like(x_f_train[:, 0]), create_graph=True)[0][:, 1]
     grad_u_t = grad_u[:, 0]
     grad_u_x = grad_u[:, 1]
-    grad_u_xx = torch.autograd.grad(grad_u_x, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 1]
-    grad_u_xxx = torch.autograd.grad(grad_u_xx, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 1]
+    grad_u_xx = torch.autograd.grad(grad_u_x, x_f_train, grad_outputs=torch.ones_like(x_f_train[:, 0]), create_graph=True)[0][:, 1]
+    grad_u_xxx = torch.autograd.grad(grad_u_xx, x_f_train, grad_outputs=torch.ones_like(x_f_train[:, 0]), create_graph=True)[0][:, 1]
 
     # UQ single
-    kappa = x_f_train[:, 4].reshape(-1, )
-    residual = grad_u_t.reshape(-1, ) + grad_u_sq_x.reshape(-1, ) + kappa * grad_u_xxx.reshape(-1, )
+    kappa = x_f_train[:, 5].reshape(-1, )
+    gamma = x_f_train[:, 4].reshape(-1, )
+    residual = grad_u_t.reshape(-1, ) + gamma * grad_u_sq_x.reshape(-1, ) + kappa * grad_u_xxx.reshape(-1, )
 
     # residual = grad_u_t.reshape(-1, ) + grad_u_sq_x.reshape(-1, ) + grad_u_xxx.reshape(-1, )
 
@@ -79,8 +81,12 @@ def exact(inputs):
     #UQ single
     alpha = inputs[:, 2]
     beta = inputs[:, 3]
-    kappa = inputs[:, 4]
+    # beta = 0
+    gamma = inputs[:, 4]
+    kappa = inputs[:, 5]
     u = beta + (alpha - beta) / torch.cosh(np.sqrt((alpha - beta) / (12 * kappa)) * (x - (beta + (alpha - beta) / 3) * t)) ** 2
+    u = u / gamma
+
 
 
     # KdV double soliton
@@ -117,7 +123,8 @@ def ub0(t):
     x1 = t[:, 1].reshape(-1, 1)
     x2 = t[:, 2].reshape(-1, 1)
     x3 = t[:, 3].reshape(-1, 1)
-    inputs = torch.cat([t0, x0, x1, x2, x3], 1)
+    x4 = t[:, 4].reshape(-1, 1)
+    inputs = torch.cat([t0, x0, x1, x2, x3, x4], 1)
 
     # UQ double
     # t0 = t[:, 0].reshape(-1, 1)  # !!
@@ -149,7 +156,8 @@ def ub1(t):
     x1 = t[:, 1].reshape(-1, 1)
     x2 = t[:, 2].reshape(-1, 1)
     x3 = t[:, 3].reshape(-1, 1)
-    inputs = torch.cat([t0, x0, x1, x2, x3], 1)
+    x4 = t[:, 4].reshape(-1, 1)
+    inputs = torch.cat([t0, x0, x1, x2, x3, x4], 1)
 
     # UQ double
     # t0 = t[:, 0].reshape(-1, 1)  # !!
@@ -182,7 +190,8 @@ def ub2(t):
     x1 = t[:, 1].reshape(-1, 1)
     x2 = t[:, 2].reshape(-1, 1)
     x3 = t[:, 3].reshape(-1, 1)
-    inputs = torch.cat([t0, x0, x1, x2, x3], 1)
+    x4 = t[:, 4].reshape(-1, 1)
+    inputs = torch.cat([t0, x0, x1, x2, x3, x4], 1)
 
     # UQ double
     # t0 = t[:, 0].reshape(-1, 1)  # !!
@@ -263,13 +272,14 @@ def compute_generalization_error(model, extrema, images_path=None):
 
     Returns: absolute and relative L2 norm of the error solution
     '''
+    model = model.to("cpu") # otherwise error on Leonhard
     model.eval()
     test_inp = convert(torch.rand([100000, extrema.shape[0]]), extrema)
     # UQ
     test_inp1 = convert(torch.rand([100000, parameters_values.shape[0]]), parameters_values)
     test_inp = torch.cat([test_inp, test_inp1], 1)
     Exact = (exact(test_inp)).numpy()
-    test_out = model(test_inp).detach().numpy()
+    test_out = (model(test_inp)).detach().numpy() # .cpu()
     assert (Exact.shape[1] == test_out.shape[1])
     L2_test = np.sqrt(np.mean((Exact - test_out) ** 2))
     print("Error Test:", L2_test)
@@ -310,9 +320,10 @@ def plotting(model, images_path, extrema, solid):
 
         # UQ single
         alpha = torch.full(size=(x.shape[0], 1), fill_value=9., dtype=torch.float)
-        beta = torch.full(size=(x.shape[0], 1), fill_value=0., dtype=torch.float)
+        beta = torch.full(size=(x.shape[0], 1), fill_value=-0., dtype=torch.float)
+        gamma = torch.full(size=(x.shape[0], 1), fill_value=1., dtype=torch.float)
         kappa = torch.full(size=(x.shape[0], 1), fill_value=1., dtype=torch.float)
-        plot_var = torch.cat([plot_var, alpha, beta, kappa], 1)
+        plot_var = torch.cat([plot_var, alpha, beta, gamma, kappa], 1)
 
         # UQ double
         # a = torch.full(size=(x.shape[0], 1), fill_value=0.5, dtype=torch.float)

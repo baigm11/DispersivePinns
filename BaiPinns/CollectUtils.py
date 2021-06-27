@@ -18,6 +18,7 @@ def select_over_retrainings(folder_path, selection="error_train", mode="min", co
             models["metric_0"] = models["error_train"]
             models["metric_1"] = models["error_wreg"]
             models["metric_2"] = models["error_res"] + models["error_vars"]
+            models["metric_3"] = models["rel_L2_norm"]
 
             if os.path.isfile(retrain_path + "/TrainedModel/model.pkl"):
                 trained_model = torch.load(retrain_path + "/TrainedModel/model.pkl", map_location=torch.device('cpu'))

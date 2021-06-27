@@ -12,8 +12,8 @@ def initialize_inputs(len_sys_argv):
         sampling_seed_ = 0
 
         # Number of training+validation points
-        n_coll_ = 2048
-        n_u_ = 1024
+        n_coll_ = 2048 * 2
+        n_u_ = 1024 * 2
         n_int_ = 0
 
         # Only for Navier Stokes
@@ -32,7 +32,7 @@ def initialize_inputs(len_sys_argv):
             "regularization_parameter": 0,
             "batch_size": (n_coll_ + n_u_ + n_int_),
             "epochs": 1,
-            "max_iter": 100,
+            "max_iter": 1000,
             "activation": "tanh",
             "optimizer": "LBFGS" #ADAM
         }
@@ -338,7 +338,7 @@ os.mkdir(images_path)
 model_path = folder_path + "/TrainedModel"
 os.mkdir(model_path)
 L2_test, rel_L2_test = Ec.compute_generalization_error(model, extrema, images_path)
-Ec.plotting(model, images_path, extrema, solid_object)
+Ec.plotting(model, images_path, extrema, solid_object) # comment for UQ
 
 end_plotting = time.time() - end
 

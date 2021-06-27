@@ -1,8 +1,5 @@
 from ImportFile import *
 
-import EquationModels.DispersiveEquation.peakon_lim as pl
-import EquationModels.DispersiveEquation.peakon_lim_double as pld
-
 pi = math.pi
 
 # Number of time dimensions
@@ -14,14 +11,11 @@ parameter_dimensions = 0
 # Number of output dimensions
 output_dimensions = 1
 # Domain Extrema
-extrema_values = torch.tensor([[0., 6.],  # Time t 6.; pl [0., 10.]; pld [0., 6.]
-                               [-15., 35.]])  # Space x 30.; pl [0., 60.]; pld [-15., 35.]
+extrema_values = torch.tensor([[-1, 1],  # Time t
+                               [-10, 10]])  # Space x
 # Additional variable to use here
 c = 3
 
-# val_range = [-0.1, 2.] #CH single & double soliton
-# val_range = [-0.1, 1.] #CH single peakon lim
-val_range = [-0.1, 3.] #CH double peakon lim
 
 def compute_res(network, x_f_train, space_dimensions, solid_object, computing_error=False):
     '''
@@ -45,16 +39,8 @@ def compute_res(network, x_f_train, space_dimensions, solid_object, computing_er
     grad_u_x = grad_u[:, 1]
     grad_u_xx = torch.autograd.grad(grad_u_x, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 1]
     grad_u_xxx = torch.autograd.grad(grad_u_xx, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 1]
-    grad_u_xxt = torch.autograd.grad(grad_u_xx, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 0]
 
-
-    # residual = grad_u_t.reshape(-1, ) - grad_u_xxt.reshape(-1, ) + 3 * u * grad_u_x.reshape(-1, ) \
-    # - 2 * grad_u_x.reshape(-1, ) * grad_u_xx.reshape(-1, ) - u * grad_u_xxx.reshape(-1, )
-
-    #peakon limit
-    residual = grad_u_t.reshape(-1, ) - grad_u_xxt.reshape(-1, ) + 3 * u * grad_u_x.reshape(-1, ) \
-             - 2 * grad_u_x.reshape(-1, ) * grad_u_xx.reshape(-1, ) - u * grad_u_xxx.reshape(-1, ) \
-             + 2 * pl.k * pl.k * grad_u_x
+    residual = grad_u_t.reshape(-1, ) + grad_u_sq_x.reshape(-1, ) + grad_u_xxx.reshape(-1, )
 
     return residual
 
@@ -69,34 +55,7 @@ def exact(inputs):
     '''
     t = inputs[:, 0]
     x = inputs[:, 1]
-
-    #CH single peakon
-    # c = torch.tensor(2.)
-    # x0 = torch.tensor(10.)
-    # u = c * torch.exp(-torch.abs(x - x0 - c * t))
-
-    # CH double peakon
-    # c = torch.tensor(2.)
-    # x1 = torch.tensor(10.)
-    # x2 = torch.tensor(13.)
-    # u = c * torch.exp(-torch.abs(x - x1 - c * t)) + 0.5 * c * torch.exp(-torch.abs(x - x2 - 0.5 * c * t))
-
-    # CH double anti-peakon
-    # c = torch.tensor(2.)
-    # x1 = torch.tensor(10.)
-    # x2 = torch.tensor(20.)
-    # u = c * torch.exp(-torch.abs(x - x1 - c * t)) - c * torch.exp(-torch.abs(x - x2 + c * t))
-
-    # CH single peakon lim
-    # u = torch.full(size=(t.shape[0], 1), fill_value=0., dtype=torch.double)
-    # for i in range(t.shape[0]):
-    #     u[i] = torch.from_numpy(np.asarray(pl.u(x[i].detach().numpy(), t[i].detach().numpy())))
-
-    # CH double peakon lim
-    u = torch.full(size=(t.shape[0], 1), fill_value=0., dtype=torch.double)
-    for i in range(t.shape[0]):
-        u[i] = torch.from_numpy(np.asarray(pld.u_x(x[i].detach().numpy(), t[i].detach().numpy())))
-
+    u = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x - c * t)) ** 2
     return u.reshape(-1, 1)
 
 
@@ -110,7 +69,7 @@ def ub0(t):
     '''
     # Specify tipy of BC: "func" = "Dirichlet
     type_BC = ["func"]
-    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 0], dtype=torch.double)
+    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 0])
     inputs = torch.cat([t, x0], 1)
     out = exact(inputs)
     return out.reshape(-1, 1), type_BC
@@ -125,38 +84,17 @@ def ub1(t):
     Returns: the vector containing the BC at given inputs
     '''
     type_BC = ["func"]
-    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1], dtype=torch.double)
+    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1])
     inputs = torch.cat([t, x0], 1)
     out = exact(inputs)
     return out.reshape(-1, 1), type_BC
-
-
-def ub2(t):
-    '''
-    Assign Boundary conditions at x=x_right
-    Args:
-        t: time vector (x is fixed and x=x_right, so it is not given as input). BC can be function of time only for 1D space dimensions
-
-    Returns: the vector containing the BC at given inputs
-    '''
-    type_BC = ["der"]
-    x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1], dtype=torch.double)
-    inputs = torch.cat([t, x0], 1)
-    inputs.requires_grad_(True)
-
-    u = exact(inputs).reshape(-1, )
-    grad_u = torch.autograd.grad(u, inputs, grad_outputs=torch.ones(inputs.shape[0], ), create_graph=True)[0]
-
-    grad_u_x = grad_u[:, 1]
-
-    return grad_u_x.reshape(-1, 1), type_BC
 
 
 # List containing the BC at x=x_left and x=x_rigth. For many space dimension then:
 # list_of_BC = [[ub0x, ub1x],
 #               [ub0y, ub1y]],
 
-list_of_BC = [[ub0, ub1, ub2]]
+list_of_BC = [[ub0, ub1]]
 
 
 def u0(x):
@@ -168,28 +106,7 @@ def u0(x):
     Returns: the vector containing the IC at given inputs
 
     '''
-
-    #CH sinlge peakon
-    # c = torch.tensor(2.)
-    # x0 = torch.tensor(10.)
-    # u0 = c * torch.exp(-torch.abs(x - x0))
-
-    # CH double peakon
-    # c = torch.tensor(2.)
-    # x1 = torch.tensor(10.)
-    # x2 = torch.tensor(13.)
-    # u0 = c * torch.exp(-torch.abs(x - x1)) + 0.5 * c * torch.exp(-torch.abs(x - x2))
-
-    # CH single peakon lim
-    # u0 = torch.full(size=(x.shape[0], 1), fill_value=0., dtype=torch.double)
-    # for i in range(x.shape[0]):
-    #     u0[i] = torch.from_numpy(np.asarray(pl.u0_x(x[i].detach().numpy())))
-
-    # CH double peakon lim
-    u0 = torch.full(size=(x.shape[0], 1), fill_value=0., dtype=torch.double)
-    for i in range(x.shape[0]):
-        u0[i] = torch.from_numpy(np.asarray(pld.u_x(x[i].detach().numpy())))
-
+    u0 = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x + c)) ** 2
     return u0.reshape(-1, 1)
 
 
@@ -212,7 +129,7 @@ def compute_generalization_error(model, extrema, images_path=None):
     Returns: absolute and relative L2 norm of the error solution
     '''
     model.eval()
-    test_inp = convert(torch.rand([10000, extrema.shape[0]]), extrema) #100000
+    test_inp = convert(torch.rand([100000, extrema.shape[0]]), extrema)
     Exact = (exact(test_inp)).numpy()
     test_out = model(test_inp).detach().numpy()
     assert (Exact.shape[1] == test_out.shape[1])
@@ -245,7 +162,7 @@ def plotting(model, images_path, extrema, solid):
     model = model.eval()
     n = 500
     x = torch.reshape(torch.linspace(extrema[1, 0], extrema[1, 1], n), [n, 1])
-    time_steps = extrema_values[0, :].detach().numpy()    #[-5., 5.]
+    time_steps = [-1.0, 1.0]
     scale_vec = np.linspace(0.65, 1.55, len(time_steps))
 
     fig = plt.figure()
@@ -259,4 +176,4 @@ def plotting(model, images_path, extrema, solid):
     plt.xlabel(r'$x$')
     plt.ylabel(r'u')
     plt.legend()
-    plt.savefig(images_path + "/CH_Samples.png", dpi=500)
+    plt.savefig(images_path + "/Samples.png", dpi=500)

@@ -66,7 +66,7 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-import EquationModels.DispersiveEquation.Kawahara as Ec
+import EquationModels.DispersiveEquation.BO as Ec
 
 import ObjectClass
 from ModelClassTorch2 import *

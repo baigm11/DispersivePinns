@@ -1,8 +1,5 @@
 from ImportFile import *
 
-import EquationModels.DispersiveEquation.peakon_lim as pl
-import EquationModels.DispersiveEquation.peakon_lim_double as pld
-
 pi = math.pi
 
 # Number of time dimensions
@@ -14,14 +11,23 @@ parameter_dimensions = 0
 # Number of output dimensions
 output_dimensions = 1
 # Domain Extrema
-extrema_values = torch.tensor([[0., 6.],  # Time t 6.; pl [0., 10.]; pld [0., 6.]
-                               [-15., 35.]])  # Space x 30.; pl [0., 60.]; pld [-15., 35.]
+extrema_values = torch.tensor([[0., 35.],  # Time t; single [0., 30.]; double [0., 35.]; gen [0., 6.]; anti-gen [0., 2.]
+                               [0., 90.]])  # Space x; single [0., 80.]; double [0., 90.]; gen [0., 70.]; anti-gen [0., 60.]
 # Additional variable to use here
 c = 3
 
-# val_range = [-0.1, 2.] #CH single & double soliton
-# val_range = [-0.1, 1.] #CH single peakon lim
-val_range = [-0.1, 3.] #CH double peakon lim
+# val_range = [-0.1, 0.7] #single soliton & double soliton case 1
+# val_range = [-0.1, 4.1] #double soliton case 2, triple soliton
+# val_range = [-0.1, 10.1] #gen case 3
+# val_range = [-5.5, 1.] #anti gen
+
+#initial position of single soliton
+L = torch.tensor(20.)
+
+#initial position of double soliton
+L1 = torch.tensor(20.)
+L2 = torch.tensor(30) # 30., 35., 40.
+
 
 def compute_res(network, x_f_train, space_dimensions, solid_object, computing_error=False):
     '''
@@ -45,16 +51,10 @@ def compute_res(network, x_f_train, space_dimensions, solid_object, computing_er
     grad_u_x = grad_u[:, 1]
     grad_u_xx = torch.autograd.grad(grad_u_x, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 1]
     grad_u_xxx = torch.autograd.grad(grad_u_xx, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 1]
-    grad_u_xxt = torch.autograd.grad(grad_u_xx, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 0]
+    grad_u_xxxx = torch.autograd.grad(grad_u_xxx, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 1]
+    grad_u_xxxxx = torch.autograd.grad(grad_u_xxxx, x_f_train, grad_outputs=torch.ones(x_f_train.shape[0]), create_graph=True)[0][:, 1]
 
-
-    # residual = grad_u_t.reshape(-1, ) - grad_u_xxt.reshape(-1, ) + 3 * u * grad_u_x.reshape(-1, ) \
-    # - 2 * grad_u_x.reshape(-1, ) * grad_u_xx.reshape(-1, ) - u * grad_u_xxx.reshape(-1, )
-
-    #peakon limit
-    residual = grad_u_t.reshape(-1, ) - grad_u_xxt.reshape(-1, ) + 3 * u * grad_u_x.reshape(-1, ) \
-             - 2 * grad_u_x.reshape(-1, ) * grad_u_xx.reshape(-1, ) - u * grad_u_xxx.reshape(-1, ) \
-             + 2 * pl.k * pl.k * grad_u_x
+    residual = grad_u_t.reshape(-1, ) - grad_u_xxxxx.reshape(-1, ) + grad_u_xxx.reshape(-1, ) + u * grad_u_x.reshape(-1, ) + grad_u_x.reshape(-1, )
 
     return residual
 
@@ -70,32 +70,9 @@ def exact(inputs):
     t = inputs[:, 0]
     x = inputs[:, 1]
 
-    #CH single peakon
-    # c = torch.tensor(2.)
-    # x0 = torch.tensor(10.)
-    # u = c * torch.exp(-torch.abs(x - x0 - c * t))
-
-    # CH double peakon
-    # c = torch.tensor(2.)
-    # x1 = torch.tensor(10.)
-    # x2 = torch.tensor(13.)
-    # u = c * torch.exp(-torch.abs(x - x1 - c * t)) + 0.5 * c * torch.exp(-torch.abs(x - x2 - 0.5 * c * t))
-
-    # CH double anti-peakon
-    # c = torch.tensor(2.)
-    # x1 = torch.tensor(10.)
-    # x2 = torch.tensor(20.)
-    # u = c * torch.exp(-torch.abs(x - x1 - c * t)) - c * torch.exp(-torch.abs(x - x2 + c * t))
-
-    # CH single peakon lim
-    # u = torch.full(size=(t.shape[0], 1), fill_value=0., dtype=torch.double)
-    # for i in range(t.shape[0]):
-    #     u[i] = torch.from_numpy(np.asarray(pl.u(x[i].detach().numpy(), t[i].detach().numpy())))
-
-    # CH double peakon lim
-    u = torch.full(size=(t.shape[0], 1), fill_value=0., dtype=torch.double)
-    for i in range(t.shape[0]):
-        u[i] = torch.from_numpy(np.asarray(pld.u_x(x[i].detach().numpy(), t[i].detach().numpy())))
+    #Kawa single soliton
+    L = torch.tensor(20.)
+    u = (105 / 169) / torch.cosh((x - L - 205 * t / 169) / (2 * np.sqrt(13))) ** 4
 
     return u.reshape(-1, 1)
 
@@ -113,6 +90,8 @@ def ub0(t):
     x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 0], dtype=torch.double)
     inputs = torch.cat([t, x0], 1)
     out = exact(inputs)
+
+    # out = torch.full(size=(t.shape[0], 1), fill_value=0, dtype=torch.double)
     return out.reshape(-1, 1), type_BC
 
 
@@ -128,6 +107,8 @@ def ub1(t):
     x0 = torch.full(size=(t.shape[0], 1), fill_value=extrema_values[1, 1], dtype=torch.double)
     inputs = torch.cat([t, x0], 1)
     out = exact(inputs)
+
+    # out = torch.full(size=(t.shape[0], 1), fill_value=0, dtype=torch.double)
     return out.reshape(-1, 1), type_BC
 
 
@@ -168,27 +149,57 @@ def u0(x):
     Returns: the vector containing the IC at given inputs
 
     '''
+    # u0 = torch.tensor(3 * c) / torch.cosh(np.sqrt(c) / 2 * (x + c)) ** 2
 
-    #CH sinlge peakon
-    # c = torch.tensor(2.)
-    # x0 = torch.tensor(10.)
-    # u0 = c * torch.exp(-torch.abs(x - x0))
+    #Kawa single soliton
+    # L = torch.tensor(20.)
+    # u0 = (105 / 169) / torch.cosh((x - L) / (2 * np.sqrt(13))) ** 4
 
-    # CH double peakon
-    # c = torch.tensor(2.)
-    # x1 = torch.tensor(10.)
-    # x2 = torch.tensor(13.)
-    # u0 = c * torch.exp(-torch.abs(x - x1)) + 0.5 * c * torch.exp(-torch.abs(x - x2))
+    #Kawa double soliton
+    L1 = torch.tensor(20.)
+    L2 = torch.tensor(30.)
+    u0 = (105 / 169) / torch.cosh((x - L1) / (2 * np.sqrt(13))) ** 4 \
+      + (105 / (2 * 169)) / torch.cosh((x - L2) / np.sqrt(2 * 13)) ** 4
 
-    # CH single peakon lim
-    # u0 = torch.full(size=(x.shape[0], 1), fill_value=0., dtype=torch.double)
-    # for i in range(x.shape[0]):
-    #     u0[i] = torch.from_numpy(np.asarray(pl.u0_x(x[i].detach().numpy())))
+    # Kawa double soliton case 2 (not used)
+    # L1 = torch.tensor(20.)
+    # L2 = torch.tensor(30.)
+    # rho1 = torch.tensor(10. / 13.)
+    # rho2 = torch.tensor(8. / 13.)
+    # mu = torch.sqrt(torch.tensor(16. / 105.))
+    # d1 = rho1 / mu
+    # d2 = rho2 / mu
+    # u0 = d1 ** 2 / torch.cosh(0.25 * torch.sqrt(rho1) * (x - L1)) ** 4 \
+    #    + d2 ** 2 / torch.cosh(0.25 * torch.sqrt(rho2) * (x - L2)) ** 4 \
 
-    # CH double peakon lim
-    u0 = torch.full(size=(x.shape[0], 1), fill_value=0., dtype=torch.double)
-    for i in range(x.shape[0]):
-        u0[i] = torch.from_numpy(np.asarray(pld.u_x(x[i].detach().numpy())))
+    # Wave generation case 3
+    # gamma = torch.tensor(10.)
+    # u0 = gamma / torch.cosh((x - L) / (2 * np.sqrt(13))) ** 4
+
+    # Wave(anti) generation case 4
+    # L = torch.tensor(40.)
+    # gamma = torch.tensor(-5.)
+    # u0 = gamma / torch.cosh((x - L) / (2 * np.sqrt(13))) ** 4
+
+
+    # smaller soliton in two soliton sol
+    # L2 = torch.tensor(40.)
+    # u0 = (105 / (2 * 169)) / torch.cosh((x - L2) / np.sqrt(2 * 13)) ** 4
+
+    # Kawa triple soliton
+    # L1 = torch.tensor(20.)
+    # L2 = torch.tensor(30.)
+    # L3 = torch.tensor(40.)
+    # rho1 = torch.tensor(10. / 13.)
+    # rho2 = torch.tensor(8. / 13.)
+    # rho3 = torch.tensor(6. / 13.)
+    # mu = torch.sqrt(torch.tensor(16. / 105.))
+    # d1 = rho1 / mu
+    # d2 = rho2 / mu
+    # d3 = rho3 / mu
+    # u0 = d1 ** 2 / torch.cosh(0.25 * torch.sqrt(rho1) * (x - L1)) ** 4 \
+    #      + d2 ** 2 / torch.cosh(0.25 * torch.sqrt(rho2) * (x - L2)) ** 4 \
+    #      + d3 ** 2 / torch.cosh(0.25 * torch.sqrt(rho3) * (x - L3)) ** 4
 
     return u0.reshape(-1, 1)
 
@@ -212,7 +223,7 @@ def compute_generalization_error(model, extrema, images_path=None):
     Returns: absolute and relative L2 norm of the error solution
     '''
     model.eval()
-    test_inp = convert(torch.rand([10000, extrema.shape[0]]), extrema) #100000
+    test_inp = convert(torch.rand([100000, extrema.shape[0]]), extrema)
     Exact = (exact(test_inp)).numpy()
     test_out = model(test_inp).detach().numpy()
     assert (Exact.shape[1] == test_out.shape[1])
@@ -252,11 +263,12 @@ def plotting(model, images_path, extrema, solid):
     plt.grid(True, which="both", ls=":")
     for val, scale in zip(time_steps, scale_vec):
         plot_var = torch.cat([torch.tensor(()).new_full(size=(n, 1), fill_value=val), x], 1)
-        plt.plot(x, exact(plot_var), 'b-', linewidth=2, label=r'Exact, $t=$' + str(val) + r'$s$', color=lighten_color('grey', scale), zorder=0)
+        # comment the following line for cases not having exact sol.
+        # plt.plot(x, exact(plot_var), 'b-', linewidth=2, label=r'Exact, $t=$' + str(val) + r'$s$', color=lighten_color('grey', scale), zorder=0)
         plt.scatter(plot_var[:, 1].detach().numpy(), model(plot_var).detach().numpy(), label=r'Predicted, $t=$' + str(val) + r'$s$', marker="o", s=14,
                     color=lighten_color('C0', scale), zorder=10)
 
     plt.xlabel(r'$x$')
     plt.ylabel(r'u')
     plt.legend()
-    plt.savefig(images_path + "/CH_Samples.png", dpi=500)
+    plt.savefig(images_path + "/Samples.png", dpi=500)

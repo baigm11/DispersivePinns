@@ -14,14 +14,14 @@ parameter_dimensions = 0
 # Number of output dimensions
 output_dimensions = 1
 # Domain Extrema
-extrema_values = torch.tensor([[0., 6.],  # Time t 6.; pl [0., 10.]; pld [0., 6.]
-                               [-15., 35.]])  # Space x 30.; pl [0., 60.]; pld [-15., 35.]
+extrema_values = torch.tensor([[0., 6.],  # Time t 6.; pl [-5., 5.]; pld [0., 6.], [0., 20.], [-5., 30.]
+                               [-15., 35.]])  # Space x 30.; pl [-20., 20.]; pld [-15., 35.], [-5., 40.], [-5., 25.]
 # Additional variable to use here
-c = 3
+# c = 3
 
 # val_range = [-0.1, 2.] #CH single & double soliton
 # val_range = [-0.1, 1.] #CH single peakon lim
-val_range = [-0.1, 3.] #CH double peakon lim
+# val_range = [-0.1, 3.] #CH double peakon lim
 
 def compute_res(network, x_f_train, space_dimensions, solid_object, computing_error=False):
     '''
@@ -51,10 +51,15 @@ def compute_res(network, x_f_train, space_dimensions, solid_object, computing_er
     # residual = grad_u_t.reshape(-1, ) - grad_u_xxt.reshape(-1, ) + 3 * u * grad_u_x.reshape(-1, ) \
     # - 2 * grad_u_x.reshape(-1, ) * grad_u_xx.reshape(-1, ) - u * grad_u_xxx.reshape(-1, )
 
-    #peakon limit
+    # peakon limit single
+    # residual = grad_u_t.reshape(-1, ) - grad_u_xxt.reshape(-1, ) + 3 * u * grad_u_x.reshape(-1, ) \
+    #          - 2 * grad_u_x.reshape(-1, ) * grad_u_xx.reshape(-1, ) - u * grad_u_xxx.reshape(-1, ) \
+    #          + 2 * pl.k * pl.k * grad_u_x
+
+    # peakon limit double
     residual = grad_u_t.reshape(-1, ) - grad_u_xxt.reshape(-1, ) + 3 * u * grad_u_x.reshape(-1, ) \
-             - 2 * grad_u_x.reshape(-1, ) * grad_u_xx.reshape(-1, ) - u * grad_u_xxx.reshape(-1, ) \
-             + 2 * pl.k * pl.k * grad_u_x
+               - 2 * grad_u_x.reshape(-1, ) * grad_u_xx.reshape(-1, ) - u * grad_u_xxx.reshape(-1, ) \
+               + 2 * pld.k * pld.k * grad_u_x
 
     return residual
 
@@ -181,14 +186,17 @@ def u0(x):
     # u0 = c * torch.exp(-torch.abs(x - x1)) + 0.5 * c * torch.exp(-torch.abs(x - x2))
 
     # CH single peakon lim
-    # u0 = torch.full(size=(x.shape[0], 1), fill_value=0., dtype=torch.double)
-    # for i in range(x.shape[0]):
-    #     u0[i] = torch.from_numpy(np.asarray(pl.u0_x(x[i].detach().numpy())))
+    # t0 = torch.full(size=(x.shape[0], 1), fill_value=extrema_values[0, 0], dtype=torch.double)
+    # inputs = torch.cat([t0, x], 1)
+    # u0 = exact(inputs)
 
     # CH double peakon lim
-    u0 = torch.full(size=(x.shape[0], 1), fill_value=0., dtype=torch.double)
-    for i in range(x.shape[0]):
-        u0[i] = torch.from_numpy(np.asarray(pld.u_x(x[i].detach().numpy())))
+    t0 = torch.full(size=(x.shape[0], 1), fill_value=extrema_values[0, 0], dtype=torch.double)
+    inputs = torch.cat([t0, x], 1)
+    u0 = exact(inputs)
+    # u0 = torch.full(size=(x.shape[0], 1), fill_value=0., dtype=torch.double)
+    # for i in range(x.shape[0]):
+    #     u0[i] = torch.from_numpy(np.asarray(pld.u_x(x[i].detach().numpy(), t=extrema_values[0, 0])))
 
     return u0.reshape(-1, 1)
 
@@ -212,7 +220,7 @@ def compute_generalization_error(model, extrema, images_path=None):
     Returns: absolute and relative L2 norm of the error solution
     '''
     model.eval()
-    test_inp = convert(torch.rand([10000, extrema.shape[0]]), extrema) #100000
+    test_inp = convert(torch.rand([100000, extrema.shape[0]]), extrema) #100000
     Exact = (exact(test_inp)).numpy()
     test_out = model(test_inp).detach().numpy()
     assert (Exact.shape[1] == test_out.shape[1])

@@ -14,8 +14,8 @@ def initialize_inputs(len_sys_argv):
         sampling_seed_ = 0
 
         # Number of training+validation points
-        n_coll_ = 2048 * 1
-        n_u_ = 1024 * 1
+        n_coll_ = 2048*4 # 1500 * 9
+        n_u_ = 1024 # 1024 * 4
         n_int_ = 0
 
         # Only for Navier Stokes
@@ -24,6 +24,8 @@ def initialize_inputs(len_sys_argv):
 
         # Additional Info
         folder_path_ = "Test"
+        # additional
+        anim_name_ = "Kawa_single"
         point_ = "sobol"  # random
         validation_size_ = 0.0  # useless
         network_properties_ = {
@@ -34,14 +36,14 @@ def initialize_inputs(len_sys_argv):
             "regularization_parameter": 0,
             "batch_size": (n_coll_ + n_u_ + n_int_),
             "epochs": 1,
-            "max_iter": 10,
+            "max_iter": 3,
             "activation": "tanh",
             "optimizer": "LBFGS" #ADAM
         }
         retrain_ = 32
         shuffle_ = False
 
-    elif len_sys_argv == 13:
+    elif len_sys_argv == 14:
         print(sys.argv)
         # Random Seed for sampling the dataset
         sampling_seed_ = int(sys.argv[1])
@@ -60,21 +62,23 @@ def initialize_inputs(len_sys_argv):
 
         # Additional Info
         folder_path_ = sys.argv[7]
-        point_ = sys.argv[8]
-        validation_size_ = float(sys.argv[9])
-        network_properties_ = json.loads(sys.argv[10])
-        retrain_ = sys.argv[11]
-        if sys.argv[12] == "false":
+        anim_name_ = sys.argv[8]
+        point_ = sys.argv[9]
+        validation_size_ = float(sys.argv[10])
+        network_properties_ = json.loads(sys.argv[11])
+        retrain_ = sys.argv[12]
+        if sys.argv[13] == "false":
             shuffle_ = False
         else:
             shuffle_ = True
+
     else:
         raise ValueError("One input is missing")
 
-    return sampling_seed_, n_coll_, n_u_, n_int_, n_object, ob, folder_path_, point_, validation_size_, network_properties_, retrain_, shuffle_
+    return sampling_seed_, n_coll_, n_u_, n_int_, n_object, ob, folder_path_, anim_name_, point_, validation_size_, network_properties_, retrain_, shuffle_
 
 
-sampling_seed, N_coll, N_u, N_int, N_object, Ob, folder_path, point, validation_size, network_properties, retrain, shuffle = initialize_inputs(len(sys.argv))
+sampling_seed, N_coll, N_u, N_int, N_object, Ob, folder_path, anim_name, point, validation_size, network_properties, retrain, shuffle = initialize_inputs(len(sys.argv))
 
 if Ec.extrema_values is not None:
     extrema = Ec.extrema_values
@@ -414,5 +418,5 @@ anim = FuncAnimation(fig, animate, init_func=init, frames=200, interval=20, blit
 
 #anim.save(images_path + '/Kawa_single.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 writergif = PillowWriter(fps=30)
-anim.save(images_path + '/Kawa_single.gif', writer=writergif)
+anim.save(images_path + "/" + anim_name + ".gif", writer=writergif)
 

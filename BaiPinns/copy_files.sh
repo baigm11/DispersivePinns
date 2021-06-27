@@ -4,8 +4,8 @@
 
 
 # scp -r ~/courses/thesis/code/BaiPinns gbai@login.leonhard.ethz.ch:~/BaiPinns
-scp -r ~/courses/thesis/code/BaiPinns/EquationModels/DispersiveEquation gbai@login.leonhard.ethz.ch:~/BaiPinns/EquationModels/DispersiveEquation
-scp ~/courses/thesis/code/BaiPinns/*.py gbai@login.leonhard.ethz.ch:~/BaiPinns
-
+scp -r ~/courses/biye/code/BaiPinns/EquationModels/DispersiveEquation/*.py gbai@login.leonhard.ethz.ch:~/BaiPinns/EquationModels/DispersiveEquation
+scp ~/courses/biye/code/BaiPinns/*.py gbai@login.leonhard.ethz.ch:~/BaiPinns
+# scp ~/courses/biye/code/BaiPinns/best/* gbai@login.leonhard.ethz.ch:~/BaiPinns/best
 
 
